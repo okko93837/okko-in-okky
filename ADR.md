@@ -90,6 +90,41 @@ Supabase Anonymous Auth로 비로그인 사용자에게 임시 UUID를 발급한
 
 ---
 
+## ADR-004: Supabase 스키마 셋팅
+
+**상태**: 확정
+**일자**: 2026-02-21
+
+### 결정
+
+Supabase 대시보드에서 `clothing_items`, `outfits` 테이블과 `clothing-images`, `outfit-images` Storage 버킷을 생성한다. RLS 정책으로 본인 데이터만 접근 가능하게 한다.
+
+### 스키마 구성
+
+| 리소스 | 용도 | RLS |
+|--------|------|-----|
+| `clothing_items` 테이블 | 개별 옷 아이템 (상의/하의/신발) + 메타데이터 | SELECT/INSERT/DELETE: `auth.uid() = user_id` |
+| `outfits` 테이블 | 코디 조합 + 착용 이미지 URL | SELECT/INSERT/DELETE: `auth.uid() = user_id` |
+| `clothing-images` 버킷 | 제품샷 이미지 (public read) | INSERT: authenticated, SELECT: public |
+| `outfit-images` 버킷 | 착용 이미지 (public read) | INSERT: authenticated, SELECT: public |
+
+### 근거
+
+- **테이블 분리**: 옷 아이템과 코디 조합은 1:N 관계 → 별도 테이블이 정규화에 적합
+- **Public 버킷**: 이미지 URL을 직접 `<img src>`에 사용 가능 → CDN 활용, 추가 인증 불필요
+- **RLS 분리 정책**: SELECT/INSERT/DELETE를 개별 정책으로 → 세밀한 접근 제어
+
+### 검증 완료 항목
+
+- [x] `clothing_items` 테이블 생성 + RLS
+- [x] `outfits` 테이블 생성 + RLS
+- [x] `clothing-images` 버킷 (public: true)
+- [x] `outfit-images` 버킷 (public: true)
+- [x] Anonymous Sign-In 동작
+- [x] Service Role Key 테이블 접근
+
+---
+
 ## ADR-003: 디자인 시스템 (컬러 + 레이아웃)
 
 **상태**: 확정

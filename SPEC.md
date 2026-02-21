@@ -146,6 +146,29 @@ create policy "Users can access own items"
   using (auth.uid() = user_id);
 ```
 
+### 테이블: outfits
+```sql
+create table outfits (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) not null,
+  top_id uuid references clothing_items(id) not null,
+  bottom_id uuid references clothing_items(id) not null,
+  shoes_id uuid references clothing_items(id) not null,
+  preset_model_id text not null,
+  generated_image_url text not null,
+  created_at timestamptz default now()
+);
+
+-- RLS: 본인 데이터만 접근
+alter table outfits enable row level security;
+create policy "Users can view own outfits"
+  on outfits for select using (auth.uid() = user_id);
+create policy "Users can insert own outfits"
+  on outfits for insert with check (auth.uid() = user_id);
+create policy "Users can delete own outfits"
+  on outfits for delete using (auth.uid() = user_id);
+```
+
 ### Storage 버킷
 - `clothing-images` — 제품샷 이미지 저장
 - `outfit-images` — 착용 이미지 저장
