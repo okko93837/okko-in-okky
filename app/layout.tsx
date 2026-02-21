@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} antialiased bg-zinc-50`}>
-        <div className="mx-auto w-full min-h-screen bg-zinc-50 relative pb-14">
+        <div className="mx-auto w-full md:max-w-md min-h-screen bg-zinc-50 relative md:shadow-sm pb-14">
           {children}
         </div>
         <BottomNav />
