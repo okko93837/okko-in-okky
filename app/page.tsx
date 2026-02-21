@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <main>
       {/* ── 헤더 ── */}
-      <div className="px-4 pt-4 pb-3">
+      <div className="px-4 pt-4 pb-8">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-rose-500 rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -16,7 +16,7 @@ export default function HomePage() {
             OKKO <span className="text-zinc-400 font-normal text-sm">in</span> OKKY
           </h1>
         </div>
-        <p className="text-zinc-500 text-sm mt-2">
+        <p className="text-zinc-500 text-sm mt-4">
           사진 한 장으로 나만의 옷장을 만들고,<br />
           AI가 코디를 미리 보여드려요.
         </p>
