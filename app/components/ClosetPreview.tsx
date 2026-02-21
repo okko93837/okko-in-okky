@@ -15,7 +15,6 @@ const categories: { key: ClothingCategory; label: string }[] = [
 export default function ClosetPreview() {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<ClothingCategory>('top');
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
@@ -31,14 +30,11 @@ export default function ClosetPreview() {
 
       if (data && data.length > 0) {
         setItems(data as ClothingItem[]);
-        setVisible(true);
       }
     }
 
     load();
   }, []);
-
-  if (!visible) return null;
 
   const filtered = items.filter((i) => i.category === activeCategory);
   const display = filtered.slice(0, 6);
@@ -84,17 +80,24 @@ export default function ClosetPreview() {
             />
           </div>
         ))}
-        {Array.from({ length: emptySlots }).map((_, i) => (
-          <Link
-            key={`empty-${i}`}
-            href="/upload"
-            className="aspect-square bg-zinc-100 rounded-xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-400"
-          >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </Link>
-        ))}
+        {Array.from({ length: emptySlots }).map((_, i) =>
+          i === emptySlots - 1 ? (
+            <Link
+              key={`empty-${i}`}
+              href="/upload"
+              className="aspect-square bg-zinc-100 rounded-xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-400"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </Link>
+          ) : (
+            <div
+              key={`empty-${i}`}
+              className="aspect-square bg-zinc-200 rounded-xl"
+            />
+          )
+        )}
       </div>
     </div>
   );
