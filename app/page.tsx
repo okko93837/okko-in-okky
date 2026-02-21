@@ -5,14 +5,16 @@ export default function HomePage() {
   return (
     <main>
       {/* ── 헤더 ── */}
-      <div className="px-4 pt-8 pb-6">
-        <div className="flex items-center gap-2 mb-1">
+      <div className="px-4 pt-4 pb-6">
+        <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-rose-500 rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
           </div>
-          <h1 className="text-zinc-900 font-bold text-lg">오늘의 코디</h1>
+          <h1 className="text-zinc-900 font-bold text-lg">
+            OKKO <span className="text-zinc-400 font-normal text-sm">in</span> OKKY
+          </h1>
         </div>
         <p className="text-zinc-500 text-sm mt-2">
           사진 한 장으로 나만의 옷장을 만들고,<br />
