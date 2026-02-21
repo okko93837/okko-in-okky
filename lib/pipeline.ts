@@ -123,10 +123,11 @@ export function fileToDataUrl(file: File): Promise<string> {
   return blobToDataUrl(file);
 }
 
-/** 모자이크 이미지에서 바운딩 박스로 크롭 (10% 패딩) */
+/** 폴리곤 마스크로 의류 영역만 추출 (바운딩 박스 + 폴리곤 클리핑) */
 export async function cropFromImage(
   imageDataUrl: string,
   box: number[],
+  polygons: number[],
 ): Promise<string> {
   const img = new Image();
   img.src = imageDataUrl;
@@ -152,6 +153,18 @@ export async function cropFromImage(
   canvas.width = sw;
   canvas.height = sh;
   const ctx = canvas.getContext('2d')!;
+
+  // 폴리곤이 있으면 클리핑 패스로 사용
+  if (polygons.length >= 6) {
+    ctx.beginPath();
+    ctx.moveTo(polygons[0] - sx, polygons[1] - sy);
+    for (let i = 2; i < polygons.length; i += 2) {
+      ctx.lineTo(polygons[i] - sx, polygons[i + 1] - sy);
+    }
+    ctx.closePath();
+    ctx.clip();
+  }
+
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
 
   return canvas.toDataURL('image/png');
