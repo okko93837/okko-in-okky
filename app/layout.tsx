@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import './globals.css';
+import BottomNav from './components/BottomNav';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,8 +21,11 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} antialiased bg-zinc-50`}>
-        <div className="mx-auto w-full max-w-md min-h-screen bg-white relative shadow-sm">
-          {children}
+        <div className="mx-auto w-full max-w-md min-h-screen bg-white relative shadow-sm flex flex-col">
+          <div className="flex-1 pb-14">
+            {children}
+          </div>
+          <BottomNav />
         </div>
       </body>
     </html>
