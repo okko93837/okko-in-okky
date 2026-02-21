@@ -2,6 +2,7 @@
 
 import { useReducer, useRef, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   pipelineReducer,
   initialPipelineState,
@@ -17,7 +18,10 @@ import {
 } from '@/lib/pipeline';
 import { mosaicFaces } from '@/lib/opencv';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
-import type { PipelineStep, ProcessedItem, ItemState } from '@/types';
+import type { PipelineState, PipelineStep, ProcessedItem, ItemState } from '@/types';
+
+// ── HMR 상태 보존: 모듈 레벨 변수는 Fast Refresh 사이에서도 유지됨 ──
+let __hmrState: PipelineState | null = null;
 
 const CATEGORY_LABELS: Record<string, string> = {
   top: '상의',
@@ -98,14 +102,38 @@ function boxToScreenCoords(
 
 export default function UploadPage() {
   const router = useRouter();
-  const [state, dispatch] = useReducer(pipelineReducer, initialPipelineState);
+  const isHmrRestore = useRef(!!__hmrState);
+  const [state, dispatch] = useReducer(
+    pipelineReducer,
+    __hmrState ?? initialPipelineState,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imgRect, setImgRect] = useState<DOMRect | null>(null);
+  const [, setImgRect] = useState<DOMRect | null>(null);
   const [origSize, setOrigSize] = useState({ w: 0, h: 0 });
   const [slideIndex, setSlideIndex] = useState(0);
+
+  // HMR 상태 동기화: 매 state 변경마다 모듈 변수에 저장
+  useEffect(() => {
+    __hmrState = state;
+  }, [state]);
+
+  // HMR 복원 시: 비동기 작업 중이었으면 에러로 전환
+  useEffect(() => {
+    if (!isHmrRestore.current) return;
+    isHmrRestore.current = false;
+    const s = state.step;
+    if (s === 'segmenting' || s === 'processing_items' || s === 'saving') {
+      dispatch({
+        type: 'SET_ERROR',
+        message: '페이지가 리로드되어 처리가 중단되었습니다. 다시 시도해주세요.',
+        step: s,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 이미지 렌더링 영역 계산
   const updateImgRect = useCallback(() => {
@@ -514,10 +542,12 @@ export default function UploadPage() {
       <UploadHeader step={state.step} onBack={goHome} />
       <main className="flex-1 relative overflow-hidden">
         {state.originalDataUrl && (
-          <img
+          <Image
             src={state.originalDataUrl}
             alt="원본"
-            className="absolute inset-0 w-full h-full object-contain bg-black"
+            fill
+            className="object-contain bg-black"
+            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-white/70 flex flex-col items-center justify-center">
@@ -539,10 +569,12 @@ export default function UploadPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 relative">
           {state.blurredDataUrl && (
-            <img
+            <Image
               src={state.blurredDataUrl}
               alt="블러 처리됨"
-              className="absolute inset-0 w-full h-full object-contain bg-black"
+              fill
+              className="object-contain bg-black"
+              unoptimized
             />
           )}
           <div className="absolute bottom-3 left-0 right-0 text-center">
@@ -580,10 +612,12 @@ export default function UploadPage() {
       <UploadHeader step={state.step} onBack={goHome} />
       <main className="flex-1 relative overflow-hidden bg-black">
         {state.blurredDataUrl && (
-          <img
+          <Image
             src={state.blurredDataUrl}
             alt="분석 중"
-            className="absolute inset-0 w-full h-full object-contain opacity-50"
+            fill
+            className="object-contain opacity-50"
+            unoptimized
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -606,11 +640,13 @@ export default function UploadPage() {
       <main className="flex-1 relative overflow-hidden bg-black">
         {/* 모자이크 이미지 */}
         {state.blurredDataUrl && (
-          <img
+          <Image
             ref={imgRef}
             src={state.blurredDataUrl}
             alt="감지 결과"
-            className="absolute inset-0 w-full h-full object-contain"
+            fill
+            className="object-contain"
+            unoptimized
             onLoad={() => {
               updateImgRect();
               // 원본 크기 갱신
@@ -721,10 +757,12 @@ export default function UploadPage() {
                     height: coords.height,
                   }}
                 >
-                  <img
+                  <Image
                     src={item.productShotDataUrl}
                     alt={`${CATEGORY_LABELS[item.category]} 제품샷`}
-                    className="w-full h-full object-contain rounded-lg shadow-lg"
+                    fill
+                    className="object-contain rounded-lg shadow-lg"
+                    unoptimized
                   />
                 </div>
               )}
@@ -775,10 +813,13 @@ export default function UploadPage() {
             <div className="absolute inset-0 flex items-center justify-center px-6">
               <div className="w-full max-w-sm animate-fade-scale">
                 <div className="aspect-square bg-white rounded-2xl shadow-lg overflow-hidden flex items-center justify-center p-4">
-                  <img
+                  <Image
                     src={current.productShotDataUrl!}
                     alt={`${CATEGORY_LABELS[current.category]} 제품샷`}
+                    width={500}
+                    height={500}
                     className="max-w-full max-h-full object-contain"
+                    unoptimized
                   />
                 </div>
                 {/* 재질/색상 칩 */}
@@ -869,10 +910,12 @@ export default function UploadPage() {
       <UploadHeader step={state.step} onBack={goHome} />
       <main className="flex-1 relative overflow-hidden">
         {state.blurredDataUrl && (
-          <img
+          <Image
             src={state.blurredDataUrl}
             alt="저장 중"
-            className="absolute inset-0 w-full h-full object-contain bg-black opacity-40"
+            fill
+            className="object-contain bg-black opacity-40"
+            unoptimized
           />
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -913,11 +956,13 @@ export default function UploadPage() {
               .filter((item) => item.productShotDataUrl)
               .map((item, idx) => (
                 <div key={idx} className="animate-fade-scale bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="aspect-square bg-zinc-50">
-                    <img
+                  <div className="aspect-square bg-zinc-50 relative">
+                    <Image
                       src={item.productShotDataUrl!}
                       alt={`${CATEGORY_LABELS[item.category]} 제품샷`}
-                      className="w-full h-full object-contain p-2"
+                      fill
+                      className="object-contain p-2"
+                      unoptimized
                     />
                   </div>
                   <div className="px-3 py-2 space-y-1">
