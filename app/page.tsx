@@ -23,18 +23,37 @@ export default function HomePage() {
       </div>
 
       {/* ── 히어로 ── */}
-      <div className="mx-4 rounded-2xl bg-gradient-to-br from-zinc-200 to-zinc-100 p-6 mb-6 relative overflow-hidden">
-        <div className="absolute top-4 right-4 w-20 h-20 bg-rose-400/20 rounded-full" />
-        <div className="absolute bottom-2 right-8 w-12 h-12 bg-rose-300/20 rounded-full" />
-        <p className="text-zinc-800 font-semibold text-base mb-1">전신 사진 1장이면 끝</p>
-        <p className="text-zinc-500 text-xs mb-5">AI가 자동으로 분리 · 분석 · 정리</p>
+      <div className="mx-4 rounded-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-100 p-6 mb-6 relative overflow-hidden border border-zinc-200/60">
+        {/* 데코 서클 */}
+        <div className="absolute -top-6 -right-6 w-32 h-32 bg-rose-400/10 rounded-full" />
+        <div className="absolute top-10 right-6 w-16 h-16 bg-rose-300/15 rounded-full" />
+        <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-zinc-300/20 rounded-full" />
+
+        {/* 옷걸이 아이콘 */}
+        <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center mb-4">
+          <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3c0 1.1.6 2 1.5 2.5L3 14h18l-7.5-6.5A3 3 0 0 0 15 5a3 3 0 0 0-3-3z" />
+            <path d="M3 14v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
+          </svg>
+        </div>
+
+        <p className="text-zinc-800 font-bold text-lg mb-1 relative">전신 사진 1장이면 끝</p>
+        <p className="text-zinc-500 text-sm mb-6 relative">AI가 자동으로 분리 · 분석 · 정리</p>
+
         <Link
           href="/upload"
-          className="inline-block bg-rose-500 hover:bg-rose-400 text-white font-semibold text-sm px-4 py-3 rounded-xl shadow-lg shadow-rose-500/25 transition-all"
+          className="relative inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-400 text-white font-semibold text-sm px-5 py-3 rounded-xl shadow-lg shadow-rose-500/25 transition-all"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
           사진 업로드하기
         </Link>
-        <div className="flex items-start gap-2 mt-5">
+
+        {/* 프라이버시 안내 */}
+        <div className="flex items-start gap-2 mt-5 bg-white/60 rounded-lg px-3 py-2.5 relative">
           <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
