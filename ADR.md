@@ -22,7 +22,7 @@ Python 서버 없이 클라이언트 WASM + 서버리스 API로 전체 파이프
 | 제품샷 생성 | OpenAI gpt-image-1.5 | API Route |
 | 착용 이미지 생성 | OpenAI gpt-image-1.5 | API Route |
 | 프리셋 모델 | AI 사전 생성 정적 에셋 | public/ |
-| DB | 미정 (로컬 or Supabase) | - |
+| DB / Storage | Supabase (PostgreSQL + Storage) | 클라우드 |
 
 ### 파이프라인 흐름
 
@@ -65,4 +65,4 @@ Python 서버 없이 클라이언트 WASM + 서버리스 API로 전체 파이프
 
 - **OpenAI** — gpt-image-1.5 (제품샷 + 착용 이미지)
 - **Replicate** — SAM3 세그멘테이션
-- **멀티모달 LLM** — 재질 파악 (모델 미정)
+- **Supabase** — DB(PostgreSQL) + 이미지 Storage (프로젝트: eijtajtngderojuvxdon)
