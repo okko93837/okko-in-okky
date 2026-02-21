@@ -41,24 +41,24 @@ export default function ClosetPreview() {
   if (!visible) return null;
 
   const filtered = items.filter((i) => i.category === activeCategory);
-  const display = filtered.slice(0, 3);
-  const emptySlots = Math.max(0, 3 - display.length);
+  const display = filtered.slice(0, 6);
+  const emptySlots = Math.max(0, 6 - display.length);
 
   return (
-    <section className="px-6 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-zinc-900">내 옷장</h2>
-        <Link href="/closet" className="text-xs text-rose-500 font-medium">
+    <div className="px-6 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-zinc-800 font-semibold text-sm">내 옷장</p>
+        <Link href="/closet" className="text-rose-500 text-xs font-medium">
           전체보기
         </Link>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 mb-4">
         {categories.map((cat) => (
           <button
             key={cat.key}
             onClick={() => setActiveCategory(cat.key)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+            className={`text-xs font-medium px-4 py-1.5 rounded-full transition ${
               activeCategory === cat.key
                 ? 'bg-zinc-900 text-white'
                 : 'bg-zinc-200 text-zinc-600'
@@ -69,11 +69,11 @@ export default function ClosetPreview() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 mb-6">
         {display.map((item) => (
           <div
             key={item.id}
-            className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100"
+            className="relative aspect-square bg-zinc-200 rounded-xl overflow-hidden"
           >
             <Image
               src={item.image_url}
@@ -88,15 +88,14 @@ export default function ClosetPreview() {
           <Link
             key={`empty-${i}`}
             href="/upload"
-            className="aspect-square rounded-xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-400"
+            className="aspect-square bg-zinc-100 rounded-xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-400"
           >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M12 5v14M5 12h14" />
             </svg>
           </Link>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

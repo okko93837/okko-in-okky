@@ -64,7 +64,7 @@ export default function BottomNav() {
           return (
             <span
               key={tab.label}
-              className="flex flex-col items-center gap-1 text-zinc-300 cursor-not-allowed"
+              className="flex flex-col items-center gap-0.5 text-zinc-300 cursor-not-allowed"
             >
               {tab.icon}
               <span className="text-[10px]">{tab.label}</span>
@@ -77,7 +77,7 @@ export default function BottomNav() {
             key={tab.label}
             href={tab.href}
             aria-current={isActive ? 'page' : undefined}
-            className={`flex flex-col items-center gap-1 ${
+            className={`flex flex-col items-center gap-0.5 ${
               isActive
                 ? 'text-rose-500 font-semibold'
                 : 'text-zinc-400'
