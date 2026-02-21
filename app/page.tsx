@@ -3,7 +3,7 @@ import ClosetPreview from './components/ClosetPreview';
 
 export default function HomePage() {
   return (
-    <main className="bg-zinc-50">
+    <main>
       {/* ── 헤더 ── */}
       <div className="px-6 pt-8 pb-6">
         <div className="flex items-center gap-2 mb-1">
