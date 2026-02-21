@@ -220,9 +220,9 @@ export default function UploadPage() {
   const startPipeline = useCallback(async () => {
     if (!state.blurredDataUrl) return;
 
+    dispatch({ type: 'SET_STEP', step: 'segmenting' });
+
     try {
-      // 세그멘테이션
-      dispatch({ type: 'SET_STEP', step: 'segmenting' });
       const jpegDataUrl = await toJpegDataUrl(state.blurredDataUrl);
       const base64 = dataUrlToBase64(jpegDataUrl);
       const segResult = await callSegment(base64);
@@ -254,31 +254,37 @@ export default function UploadPage() {
       dispatch({ type: 'SET_ITEMS', items });
       dispatch({ type: 'SET_STEP', step: 'segment_review' });
 
-      // segment_review에서 processing_items로는 useEffect 타이머로 자동 전환
-      // processing_items 시작은 아래 useEffect에서 처리
-
     } catch (error) {
       dispatch({
         type: 'SET_ERROR',
         message: error instanceof Error ? error.message : '처리 중 오류가 발생했습니다',
-        step: state.step,
+        step: 'segmenting',
       });
     }
-  }, [state.blurredDataUrl, state.step]);
+  }, [state.blurredDataUrl]);
 
   // ── processing_items 단계: 아이템 순차 처리 ──
+  const processingStarted = useRef(false);
+
   useEffect(() => {
-    if (state.step !== 'processing_items' || state.items.length === 0) return;
+    if (state.step !== 'processing_items') {
+      processingStarted.current = false;
+      return;
+    }
+    if (state.items.length === 0 || processingStarted.current) return;
+    processingStarted.current = true;
 
     let cancelled = false;
+    // 클로저에서 items 스냅샷 캡처
+    const itemsSnapshot = [...state.items];
 
     const processItems = async () => {
       const processedItems: ProcessedItem[] = [];
 
-      for (let i = 0; i < state.items.length; i++) {
+      for (let i = 0; i < itemsSnapshot.length; i++) {
         if (cancelled) return;
 
-        const item = state.items[i];
+        const item = itemsSnapshot[i];
         dispatch({ type: 'SET_CURRENT_ITEM_INDEX', index: i });
 
         try {
@@ -354,8 +360,7 @@ export default function UploadPage() {
 
     processItems();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.step === 'processing_items' && state.items.length > 0 ? 'run' : 'skip']);
+  }, [state.step, state.items]);
 
   // ── 결과 확인 후 옷장 저장 ──
   const saveToCloset = useCallback(async () => {
@@ -573,16 +578,16 @@ export default function UploadPage() {
     return (
       <>
       <UploadHeader step={state.step} onBack={goHome} />
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden bg-black">
         {state.blurredDataUrl && (
           <img
             src={state.blurredDataUrl}
             alt="분석 중"
-            className="absolute inset-0 w-full h-full object-contain bg-black opacity-50"
+            className="absolute inset-0 w-full h-full object-contain opacity-50"
           />
         )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-xl text-center">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-xl flex flex-col items-center">
             <Spinner />
             <p className="mt-3 text-sm font-medium text-zinc-700">의류를 찾고 있어요...</p>
             <p className="mt-1 text-xs text-zinc-400">AI가 사진 속 옷을 분석하고 있습니다</p>
