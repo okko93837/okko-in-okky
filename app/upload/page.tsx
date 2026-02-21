@@ -43,6 +43,7 @@ const HEADER_INFO: Record<PipelineStep, { title: string; subtitle: string }> = {
   segmenting:        { title: 'AI 분석 중',   subtitle: '의류를 찾고 있어요' },
   segment_review:    { title: '감지 완료',    subtitle: '발견한 의류를 확인하세요' },
   processing_items:  { title: 'AI 처리 중',   subtitle: '아이템을 분석하고 있어요' },
+  result_review:     { title: '결과 확인',    subtitle: '좌우로 넘겨 확인하세요' },
   saving:            { title: '저장 중',      subtitle: '옷장에 저장하고 있어요' },
   complete:          { title: '완료',         subtitle: '옷장에 저장되었어요' },
   error:             { title: '오류 발생',    subtitle: '다시 시도해주세요' },
@@ -104,6 +105,7 @@ export default function UploadPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgRect, setImgRect] = useState<DOMRect | null>(null);
   const [origSize, setOrigSize] = useState({ w: 0, h: 0 });
+  const [slideIndex, setSlideIndex] = useState(0);
 
   // 이미지 렌더링 영역 계산
   const updateImgRect = useCallback(() => {
@@ -346,45 +348,50 @@ export default function UploadPage() {
 
       if (cancelled) return;
 
-      // 저장
-      dispatch({ type: 'SET_STEP', step: 'saving' });
-      try {
-        const supabase = createBrowserSupabaseClient();
-        let userId: string;
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          userId = session.user.id;
-        } else {
-          const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
-          if (anonError || !anonData.user) throw new Error('인증 실패');
-          userId = anonData.user.id;
-        }
-
-        for (const item of processedItems) {
-          await callSave(
-            item.category,
-            dataUrlToBase64(item.productShotDataUrl),
-            item.material,
-            item.color,
-            userId,
-          );
-        }
-
-        dispatch({ type: 'SET_STEP', step: 'complete' });
-      } catch (error) {
-        dispatch({
-          type: 'SET_ERROR',
-          message: error instanceof Error ? error.message : '저장 실패',
-          step: 'saving',
-        });
-      }
+      // 결과 리뷰로 전환 (사용자가 확인 후 저장)
+      dispatch({ type: 'SET_STEP', step: 'result_review' });
     };
 
     processItems();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step === 'processing_items' && state.items.length > 0 ? 'run' : 'skip']);
+
+  // ── 결과 확인 후 옷장 저장 ──
+  const saveToCloset = useCallback(async () => {
+    dispatch({ type: 'SET_STEP', step: 'saving' });
+    try {
+      const supabase = createBrowserSupabaseClient();
+      let userId: string;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        userId = session.user.id;
+      } else {
+        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+        if (anonError || !anonData.user) throw new Error('인증 실패');
+        userId = anonData.user.id;
+      }
+
+      for (const item of state.processedItems) {
+        await callSave(
+          item.category,
+          dataUrlToBase64(item.productShotDataUrl),
+          item.material,
+          item.color,
+          userId,
+        );
+      }
+
+      dispatch({ type: 'SET_STEP', step: 'complete' });
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        message: error instanceof Error ? error.message : '저장 실패',
+        step: 'saving',
+      });
+    }
+  }, [state.processedItems]);
 
   // ── 에러에서 재시도 ──
   const retry = useCallback(() => {
@@ -743,6 +750,108 @@ export default function UploadPage() {
             </div>
           </div>
         )}
+      </main>
+      </>
+    );
+  }
+
+  // result_review: 슬라이드 뷰로 최종 제품샷 확인
+  if (state.step === 'result_review') {
+    const finishedItems = state.items.filter((item) => item.productShotDataUrl);
+    const current = finishedItems[slideIndex];
+
+    return (
+      <>
+      <UploadHeader step={state.step} onBack={goHome} />
+      <main className="flex-1 flex flex-col bg-zinc-50">
+        {/* 슬라이드 영역 */}
+        <div className="flex-1 relative overflow-hidden">
+          {current && (
+            <div className="absolute inset-0 flex items-center justify-center px-6">
+              <div className="w-full max-w-sm animate-fade-scale">
+                <div className="aspect-square bg-white rounded-2xl shadow-lg overflow-hidden flex items-center justify-center p-4">
+                  <img
+                    src={current.productShotDataUrl!}
+                    alt={`${CATEGORY_LABELS[current.category]} 제품샷`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+                {/* 재질/색상 칩 */}
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  <span className="text-sm font-semibold text-zinc-700">
+                    {CATEGORY_LABELS[current.category]}
+                  </span>
+                  {current.material && (
+                    <span className="text-xs bg-white text-zinc-600 px-2 py-1 rounded-full shadow-sm">
+                      {current.material}
+                    </span>
+                  )}
+                  {current.color && (
+                    <span className="text-xs bg-white text-zinc-600 px-2 py-1 rounded-full shadow-sm">
+                      {current.color}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 좌우 화살표 */}
+          {finishedItems.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setSlideIndex((prev) => Math.max(0, prev - 1))}
+                disabled={slideIndex === 0}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow flex items-center justify-center disabled:opacity-30 transition"
+              >
+                <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlideIndex((prev) => Math.min(finishedItems.length - 1, prev + 1))}
+                disabled={slideIndex === finishedItems.length - 1}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow flex items-center justify-center disabled:opacity-30 transition"
+              >
+                <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* 인디케이터 + CTA */}
+        <div className="shrink-0 px-6 pb-2">
+          {/* 도트 인디케이터 */}
+          {finishedItems.length > 1 && (
+            <div className="flex justify-center gap-1.5 mb-3">
+              {finishedItems.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSlideIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === slideIndex ? 'bg-rose-500 w-4' : 'bg-zinc-300'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-zinc-400 text-center mb-2">
+            {finishedItems.length}개 아이템이 준비되었어요
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={saveToCloset}
+          className="shrink-0 w-full bg-rose-500 hover:bg-rose-400 text-white font-semibold py-4 transition"
+        >
+          옷장에 넣기
+        </button>
       </main>
       </>
     );

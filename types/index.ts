@@ -38,6 +38,7 @@ export type PipelineStep =
   | 'segmenting'
   | 'segment_review'
   | 'processing_items'
+  | 'result_review'
   | 'saving'
   | 'complete'
   | 'error';
