@@ -55,7 +55,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="주요 메뉴"
-      className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-white border-t border-zinc-200 px-4 py-3 flex justify-around z-50"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 px-4 py-3 flex justify-around z-50"
     >
       {tabs.map((tab) => {
         const isActive = !tab.disabled && pathname === tab.href;
