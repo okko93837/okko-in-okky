@@ -2,7 +2,6 @@
 
 import { useReducer, useRef, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import {
   pipelineReducer,
   initialPipelineState,
@@ -13,11 +12,13 @@ import {
   callProductShot,
   callSave,
   removeBackground,
+  preloadBgRemoval,
   toJpegDataUrl,
   cropFromImage,
 } from '@/lib/pipeline';
 import { mosaicFaces } from '@/lib/opencv';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
+import Image from 'next/image';
 import type { PipelineState, PipelineStep, ProcessedItem, ItemState } from '@/types';
 
 // ── HMR 상태 보존: 모듈 레벨 변수는 Fast Refresh 사이에서도 유지됨 ──
@@ -235,6 +236,8 @@ export default function UploadPage() {
 
       const blurred = await mosaicFaces(dataUrl);
       dispatch({ type: 'SET_BLURRED', dataUrl: blurred });
+      // 블러 확인 단계에서 WASM 모델 사전 다운로드 시작
+      preloadBgRemoval();
     } catch (error) {
       dispatch({
         type: 'SET_ERROR',
@@ -256,7 +259,7 @@ export default function UploadPage() {
       const segResult = await callSegment(base64);
 
       // 원본 이미지 크기 가져오기
-      const tmpImg = new Image();
+      const tmpImg = document.createElement('img');
       tmpImg.src = state.blurredDataUrl;
       await new Promise<void>((r) => { tmpImg.onload = () => r(); });
       setOrigSize({ w: tmpImg.width, h: tmpImg.height });

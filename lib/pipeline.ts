@@ -108,6 +108,26 @@ export async function toJpegDataUrl(pngDataUrl: string): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.9);
 }
 
+/** 이미지를 최대 크기로 축소 (배경 제거 속도 최적화) */
+export async function resizeDataUrl(dataUrl: string, maxSize = 1024): Promise<string> {
+  const img = new Image();
+  img.src = dataUrl;
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = reject;
+  });
+  if (img.width <= maxSize && img.height <= maxSize) return dataUrl;
+  const scale = maxSize / Math.max(img.width, img.height);
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL('image/png');
+}
+
 /** Blob → data URL */
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -240,11 +260,26 @@ export async function callSave(
 
 // ── 클라이언트 처리 ──
 
-/** @imgly/background-removal 동적 임포트 + 배경 제거 */
+const BG_REMOVAL_CONFIG = {
+  model: 'isnet_fp16' as const,
+  output: { format: 'image/png' as const },
+};
+
+/** WASM/ONNX 모델 사전 다운로드 — blur_preview 단계에서 호출 */
+let _preloadPromise: Promise<void> | null = null;
+export function preloadBgRemoval(): void {
+  if (_preloadPromise) return;
+  _preloadPromise = import('@imgly/background-removal')
+    .then(({ preload }) => preload(BG_REMOVAL_CONFIG))
+    .then(() => console.log('[bg-removal] 모델 프리로드 완료'))
+    .catch((e) => console.warn('[bg-removal] 프리로드 실패:', e));
+}
+
+/** @imgly/background-removal 동적 임포트 + 배경 제거 (리사이즈로 속도 최적화) */
 export async function removeBackground(imageDataUrl: string): Promise<string> {
+  if (_preloadPromise) await _preloadPromise;
+  const resized = await resizeDataUrl(imageDataUrl, 1024);
   const { removeBackground: removeBg } = await import('@imgly/background-removal');
-  const blob = await removeBg(imageDataUrl, {
-    output: { format: 'image/png' },
-  });
+  const blob = await removeBg(resized, BG_REMOVAL_CONFIG);
   return blobToDataUrl(blob);
 }
