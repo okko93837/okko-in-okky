@@ -31,6 +31,7 @@ const ITEM_STEP_LABELS: Record<string, string> = {
   removing_bg: '배경 제거 중...',
   analyzing_material: '재질 분석 중...',
   generating_product_shot: '제품샷 생성 중...',
+  removing_product_bg: '제품샷 배경 제거 중...',
   done: '완료',
 };
 
@@ -304,11 +305,21 @@ export default function UploadPage() {
             materialResult.color,
           );
           if (cancelled) return;
-          const productShotDataUrl = `data:image/png;base64,${productResult.imageBase64}`;
+          const rawProductShotDataUrl = `data:image/png;base64,${productResult.imageBase64}`;
           dispatch({
             type: 'UPDATE_ITEM',
             index: i,
-            update: { productShotDataUrl, processStep: 'done' },
+            update: { productShotDataUrl: rawProductShotDataUrl },
+          });
+
+          // 제품샷 배경 제거
+          dispatch({ type: 'UPDATE_ITEM', index: i, update: { processStep: 'removing_product_bg' } });
+          const cleanProductShotDataUrl = await removeBackground(rawProductShotDataUrl);
+          if (cancelled) return;
+          dispatch({
+            type: 'UPDATE_ITEM',
+            index: i,
+            update: { productShotDataUrl: cleanProductShotDataUrl, processStep: 'done' },
           });
 
           const processed: ProcessedItem = {
@@ -317,7 +328,7 @@ export default function UploadPage() {
             noBgDataUrl,
             material: materialResult.material,
             color: materialResult.color,
-            productShotDataUrl,
+            productShotDataUrl: cleanProductShotDataUrl,
           };
           processedItems.push(processed);
           dispatch({ type: 'ADD_PROCESSED_ITEM', item: processed });

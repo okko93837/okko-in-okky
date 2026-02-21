@@ -47,6 +47,7 @@ export type ItemProcessStep =
   | 'removing_bg'
   | 'analyzing_material'
   | 'generating_product_shot'
+  | 'removing_product_bg'
   | 'done';
 
 export interface ItemState {
