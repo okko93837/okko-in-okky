@@ -45,7 +45,7 @@ export default function ClosetPreview() {
   const emptySlots = Math.max(0, 6 - display.length);
 
   return (
-    <div className="px-6 mb-4">
+    <div className="px-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-zinc-800 font-semibold text-sm">내 옷장</p>
         <Link href="/closet" className="text-rose-500 text-xs font-medium">

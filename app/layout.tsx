@@ -21,12 +21,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} antialiased bg-zinc-50`}>
-        <div className="mx-auto w-full max-w-md min-h-screen bg-zinc-50 relative md:shadow-sm flex flex-col">
-          <div className="flex-1 pb-14">
-            {children}
-          </div>
-          <BottomNav />
+        <div className="mx-auto w-full max-w-md min-h-screen bg-zinc-50 relative md:shadow-sm pb-14">
+          {children}
         </div>
+        <BottomNav />
       </body>
     </html>
   );
