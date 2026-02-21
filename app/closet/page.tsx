@@ -42,10 +42,11 @@ export default function ClosetPage() {
   }, []);
 
   const filtered = items.filter((i) => i.category === activeCategory);
-  const counts = {
+  const counts: Record<ClothingCategory, number> = {
     top: items.filter((i) => i.category === 'top').length,
     bottom: items.filter((i) => i.category === 'bottom').length,
     shoes: items.filter((i) => i.category === 'shoes').length,
+    dress: items.filter((i) => i.category === 'dress').length,
   };
 
   return (

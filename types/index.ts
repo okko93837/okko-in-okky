@@ -123,3 +123,17 @@ export interface SaveRequest {
 export interface SaveResponse {
   item: ClothingItem;
 }
+
+// ── Preview Types ──
+
+export interface PreviewGenerateRequest {
+  modelImageUrl: string;
+  topImageUrl: string;
+  bottomImageUrl: string;
+  shoesImageUrl: string;
+  styleOptions?: import('@/lib/tryon-prompt').StyleOptions;
+}
+
+export interface PreviewGenerateResponse {
+  imageBase64: string;
+}
